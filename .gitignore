@@ -4,3 +4,10 @@ Project_Discussion/*
 
 # Project memory file for Claude Code
 CLAUDE.md
+
+# Cached sklearn pipeline for Interactive_Tool
+Interactive_Tool/artifacts/
+
+# Bytecode
+__pycache__/
+*.py[cod]
