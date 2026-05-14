@@ -1,0 +1,6 @@
+# Course spec notebook — read-only reference, not tracked
+Project_Discussion/*
+!Project_Discussion/.gitkeep
+
+# Project memory file for Claude Code
+CLAUDE.md
