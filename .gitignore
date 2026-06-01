@@ -1,0 +1,17 @@
+# Course spec notebook — read-only reference, not tracked
+Project_Discussion/*
+!Project_Discussion/.gitkeep
+
+# Project memory file for Claude Code
+CLAUDE.md
+
+# Cached sklearn pipeline for Interactive_Tool
+Interactive_Tool/artifacts/
+
+# Presentation — all generated files, keep folder skeleton only
+Presentation/*
+!Presentation/.gitkeep
+
+# Bytecode
+__pycache__/
+*.py[cod]
