@@ -1,0 +1,30 @@
+# Cross-platform Docker Compose for the Multi-LexSum interactive tool.
+#
+# From the repo root:
+#   docker compose -f Interactive_Tool/docker-compose.yml up --build
+# Then open http://localhost:7860
+#
+# Volumes persist (a) the HuggingFace model cache so DistilBART is only
+# downloaded once and (b) the trained sklearn artifacts so retraining is
+# skipped on subsequent runs.
+
+services:
+  case-analyzer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: multilexsum-tool:latest
+    container_name: multilexsum-tool
+    ports:
+      - "7860:7860"
+    volumes:
+      - hf-cache:/root/.cache/huggingface
+      - sklearn-artifacts:/app/artifacts
+    environment:
+      - GRADIO_SERVER_NAME=0.0.0.0
+      - GRADIO_SERVER_PORT=7860
+    restart: unless-stopped
+
+volumes:
+  hf-cache:
+  sklearn-artifacts:

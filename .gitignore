@@ -8,6 +8,10 @@ CLAUDE.md
 # Cached sklearn pipeline for Interactive_Tool
 Interactive_Tool/artifacts/
 
+# Presentation — all generated files, keep folder skeleton only
+Presentation/*
+!Presentation/.gitkeep
+
 # Bytecode
 __pycache__/
 *.py[cod]

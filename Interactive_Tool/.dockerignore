@@ -1,0 +1,21 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Cached artifacts get mounted at runtime, not baked into the image
+artifacts/
+
+# Local-dev files
+.venv/
+.env
+.env.*
+.git/
+.gitignore
+.DS_Store
+Thumbs.db
