@@ -9,6 +9,7 @@ Run from repo root or this folder:
 from __future__ import annotations
 
 import argparse
+import time
 
 import gradio as gr
 
@@ -66,15 +67,21 @@ def _prob_bar_markdown(probs: dict[str, float]) -> str:
     return "\n\n".join(rows)
 
 
-def result_to_markdown(result: dict) -> str:
+def result_to_stats_md(result: dict) -> str:
+    """Return markdown for the stats + predictions section only (no summary text)."""
     if err := result.get("error"):
         return f"### Error\n\n{err}"
 
-    s = result["summaries"]
     action_bars = _prob_bar_markdown(result["class_action_probs"])
     type_bars = _prob_bar_markdown(result["case_type_probs"])
 
-    return f"""### Input statistics
+    # Nonce forces Svelte to diff-update gr.Markdown on every submission,
+    # even when the predictions are identical to the previous run.
+    nonce = f'<span id="r{time.monotonic_ns()}" style="display:none"></span>'
+
+    return f"""{nonce}
+
+### Input statistics
 
 - Raw characters: **{result['raw_char_count']:,}**
 - NLTK-cleaned tokens: **{result['clean_word_count']:,}**
@@ -89,19 +96,6 @@ def result_to_markdown(result: dict) -> str:
 **Case type:** `{result['case_type']}`
 
 {type_bars}
-
----
-
-### Summaries (DistilBART cascade — excerpt → long → short → tiny)
-
-**Long**
-{s["long"]}
-
-**Short**
-{s["short"]}
-
-**Tiny**
-{s["tiny"]}
 
 ---
 
@@ -124,8 +118,12 @@ def result_to_markdown(result: dict) -> str:
 
 
 def build_ui(analyzer: CaseAnalyzer) -> gr.Blocks:
-    def analyze(text: str) -> str:
-        return result_to_markdown(analyzer.analyze(text or ""))
+    def analyze(text: str) -> tuple[str, str, str, str]:
+        result = analyzer.analyze(text or "")
+        if err := result.get("error"):
+            return f"### Error\n\n{err}", "", "", ""
+        s = result["summaries"]
+        return result_to_stats_md(result), s["long"], s["short"], s["tiny"]
 
     def load_example(name: str) -> str:
         return EXAMPLE_CASES.get(name, "")
@@ -163,12 +161,37 @@ The first summary run downloads the BART model (~1.2 GB); expect tens of seconds
                 with gr.Row():
                     btn = gr.Button("Analyze case", variant="primary")
                     clear_btn = gr.Button("Clear")
+
             with gr.Column(scale=1):
-                out = gr.Markdown(label="Results")
+                out_md = gr.Markdown()
+                gr.Markdown("### Summaries (DistilBART cascade — excerpt → long → short → tiny)")
+                out_long = gr.Textbox(
+                    label="Long  (100 – 250 tokens)",
+                    lines=6,
+                    interactive=False,
+                )
+                out_short = gr.Textbox(
+                    label="Short  (40 – 100 tokens)",
+                    lines=4,
+                    interactive=False,
+                )
+                out_tiny = gr.Textbox(
+                    label="Tiny  (15 – 40 tokens)",
+                    lines=2,
+                    interactive=False,
+                )
 
         example_dropdown.change(fn=load_example, inputs=example_dropdown, outputs=inp)
-        btn.click(fn=analyze, inputs=inp, outputs=out, show_progress="full")
-        clear_btn.click(fn=lambda: ("", ""), inputs=None, outputs=[inp, out])
+        btn.click(
+            fn=analyze,
+            inputs=inp,
+            outputs=[out_md, out_long, out_short, out_tiny],
+        )
+        clear_btn.click(
+            fn=lambda: ("", "", "", "", ""),
+            inputs=[],
+            outputs=[inp, out_md, out_long, out_short, out_tiny],
+        )
 
     return demo
 
@@ -194,6 +217,7 @@ def main() -> None:
     log("Sklearn pipeline ready. Launching UI...")
 
     demo = build_ui(analyzer)
+    demo.queue()
     demo.launch(server_name=args.host, server_port=args.port, share=args.share)
 
 
