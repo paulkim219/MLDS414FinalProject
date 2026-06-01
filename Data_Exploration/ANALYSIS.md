@@ -194,7 +194,7 @@ signal is linearly separable*.
 ## §8 — DistilBERT fine-tuning (deep NLP)
 
 **What was achieved.** Two-stage fine-tuning following the course pattern from
-*week 6 — DistilBERT with Wine Reviews*:
+*DistilBERT fine-tuning*:
 
 1. **Stage 1 (frozen backbone, 3 epochs at lr=1e-3):** the 66M DistilBERT
    parameters are frozen; only the classification head is trained on the

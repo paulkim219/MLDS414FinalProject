@@ -16,18 +16,18 @@ The repository delivers:
 
 ## NLP techniques applied
 
-| Stage | Technique | Course module |
-|---|---|---|
-| Preprocessing | Legal-domain regex (dockets, U.S.C. / reporter citations, court headers) | Applied NLP |
-| Preprocessing | NLTK `word_tokenize` → stopword removal → WordNet lemmatization | Week 3 — Text Normalization with NLTK |
-| Extractive summarization | Per-document **TF-IDF sentence ranking** (480-token budget) | Week 4 — TF-IDF |
-| Abstractive summarization | **DistilBART-CNN-12-6**, beam search + tri-gram blocking, cascade decoding | Week 6 — Summarization with T5/BART |
-| Evaluation | **ROUGE-1 / ROUGE-2 / ROUGE-L** F1 against expert ground truth | Applied NLP |
-| Classification | **Multinomial Naive Bayes** + TF-IDF (baseline, both targets) | Week 4 — Naive Bayes |
-| Classification | **Logistic Regression** + TF-IDF, balanced class weights, coefficient inspection | Week 4 — Sentiment Analysis |
-| Classification | **TensorFlow dense NN** on TF-IDF (course "must have a TF model" requirement) | Week 5 — Keras |
-| Classification | **DistilBERT** fine-tuning (frozen-head → end-to-end, two stage) | Week 6 — DistilBERT |
-| Visualization | Confusion matrix; word clouds + log-odds coefficient tables | Course-extra technique |
+| Stage | Technique |
+|---|---|
+| Preprocessing | Legal-domain regex (dockets, U.S.C. / reporter citations, court headers) |
+| Preprocessing | NLTK `word_tokenize` → stopword removal → WordNet lemmatization |
+| Extractive summarization | Per-document **TF-IDF sentence ranking** (480-token budget) |
+| Abstractive summarization | **DistilBART-CNN-12-6**, beam search + tri-gram blocking, cascade decoding |
+| Evaluation | **ROUGE-1 / ROUGE-2 / ROUGE-L** F1 against expert ground truth |
+| Classification | **Multinomial Naive Bayes** + TF-IDF (baseline, both targets) |
+| Classification | **Logistic Regression** + TF-IDF, balanced class weights, coefficient inspection |
+| Classification | **TensorFlow dense NN** on TF-IDF |
+| Classification | **DistilBERT** fine-tuning (frozen-head → end-to-end, two stage) |
+| Visualization | Confusion matrix; word clouds + log-odds coefficient tables |
 
 ---
 
