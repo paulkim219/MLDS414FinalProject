@@ -62,7 +62,11 @@ _BOILERPLATE_PATTERNS = [
     re.compile(r"\b(?:No\.|Case)\s+\d+[\d:\-cvCV]*\b"),
     re.compile(r"\d+\s+U\.S\.C\.\s*§?\s*\d+(?:\([a-z0-9]+\))*"),
     re.compile(r"\d+\s+[A-Z]\.\s?\d?[a-z]?\s+\d+"),
-    re.compile(r"(?:UNITED STATES|U\.S\.)\s+(?:DISTRICT|COURT OF APPEALS)[^\n]*", re.IGNORECASE),
+    # Only strip court-name headers that appear at the START of a line (standalone
+    # document headers).  The original [^\n]* was stripping the rest of the entire
+    # string when the text had no newlines (e.g. short narrative example texts),
+    # leaving only a 15-word fragment and bypassing BART entirely.
+    re.compile(r"(?m)^(?:UNITED STATES|U\.S\.)\s+(?:DISTRICT|COURT OF APPEALS)[^\n]*", re.IGNORECASE),
     re.compile(r"Document\s+\d+(?:-\d+)?\s+Filed\s+\d{1,2}/\d{1,2}/\d{2,4}"),
     re.compile(r"Page\s+\d+\s+of\s+\d+", re.IGNORECASE),
     re.compile(r"<[^>]+>"),
@@ -170,6 +174,11 @@ class _Summarizer:
         self._ensure_loaded()
         assert self._tokenizer is not None and self._model is not None
         inputs = self._tokenizer(text, return_tensors="pt", truncation=True, max_length=1024)
+        n_in = inputs["input_ids"].shape[1]
+        # early_stopping=True conflicts with min_new_tokens in transformers 4.40+ for
+        # short inputs — beam search can declare "all beams done" before the minimum
+        # is reached.  length_penalty=2.0 additionally biases beam scoring toward
+        # longer candidates so the model doesn't collapse to a single sentence.
         with torch.no_grad():
             out = self._model.generate(
                 **inputs,
@@ -177,14 +186,27 @@ class _Summarizer:
                 min_new_tokens=min_new,
                 num_beams=4,
                 no_repeat_ngram_size=3,
-                early_stopping=True,
+                length_penalty=2.0,
             )
-        return self._tokenizer.decode(out[0], skip_special_tokens=True).strip()
+        decoded = self._tokenizer.decode(out[0], skip_special_tokens=True).strip()
+        print(
+            f"[BART] in={n_in}tok  out={out.shape[1]}tok  "
+            f"words={len(decoded.split())}  min_new={min_new}  "
+            f"text={repr(decoded[:120])}",
+            flush=True,
+        )
+        return decoded
 
     def generate_summaries(self, excerpt: str) -> dict[str, str]:
         """Cascade summarization mirroring how Multi-LexSum experts wrote the ground truth."""
-        if not excerpt or len(excerpt.split()) < 30:
-            return {tier: excerpt for tier in TIER_LENGTHS}
+        words = excerpt.split() if excerpt else []
+        if len(words) < 30:
+            # Text too short for the cascade — return truncated tiers directly.
+            return {
+                "long":  " ".join(words),
+                "short": " ".join(words[:60]),
+                "tiny":  " ".join(words[:20]),
+            }
         long_  = self._decode(excerpt, *TIER_LENGTHS["long"])
         short_ = self._decode(long_,   *TIER_LENGTHS["short"])
         tiny_  = self._decode(short_,  *TIER_LENGTHS["tiny"])
